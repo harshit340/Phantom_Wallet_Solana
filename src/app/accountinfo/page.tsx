@@ -1,57 +1,66 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-"use client"
+"use client";
+// The dynamic function from Next.js is used to dynamically import components. This is particularly useful for code splitting and improving the initial load time of your application.
 
-import { useConnection,useWallet} from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
-import React from 'react'
+import dynamic from "next/dynamic"; 
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL , Connection, clusterApiUrl} from "@solana/web3.js";
+import { FC, useEffect, useState } from "react";
 
-export default function page() {
+const WalletMultiButton = dynamic(
+  ()=>import("@solana/wallet-adapter-react-ui").then((mod)=>mod.WalletMultiButton),
+  {ssr:false} // ssr server side rendering is false
+);
 
-    const [balance , setbalance] = React.useState(0);
-    const {connection }= useConnection();
-    const {publicKey} = useWallet();
-    const devnetKey = new PublicKey('29rHdyhBMQHMESWusiVZhDeCigrNGAXoWo45xDMa5s14');
+const WalletConnectButton = dynamic(
+  ()=>import("@solana/wallet-adapter-react-ui").then((mod)=>mod.WalletConnectButton),{ssr:false}
+);
 
-    const requestAirDrop = async(key) =>{
-        try{
-            const signature = await connection.requestAirdrop(key , 0.5 * LAMPORTS_PER_SOL)
-            await connection.confirmTransaction(signature);
-            const accountInfo = await connection.getAccountInfo(key);
-            if (accountInfo) {
-                setbalance(accountInfo.lamports / LAMPORTS_PER_SOL);
-            }
-        }catch (error) {
-            console.error('Error requesting airdrop:', error);
-        }
-    }
+const WalletDisconnectButton = dynamic(
+  ()=>import("@solana/wallet-adapter-react-ui").then((mod)=>mod.WalletDisconnectButton),{ssr:false}
+);
 
-/*     useConnection will retrieve a Connection object and useWallet will get the WalletContextState. WalletContextState has a property publicKey that is null when not connected to a wallet and has the public key of the user’s account when a wallet is connected */
-   requestAirDrop(devnetKey);
-    React.useEffect(()=>{
-        if(!connection || !publicKey){
-          return;
-        }
-     
-        const fetchBalance = async () => {
+const devnetConnection = new Connection(clusterApiUrl('devnet'));
+
+export default function Accountinfo() {
+
+    
+        const [balance, setBalance] = useState(0);
+        const { connection } = useConnection();
+        const { publicKey } = useWallet();
+      
+        useEffect(() => {
+          if (!connection || !publicKey) {
+            return;
+          }
+      
+          const fetchBalance = async () => {
             try {
-                const accountInfo = await connection.getAccountInfo(devnetKey);
+                const accountInfo = await connection.getAccountInfo(publicKey);
                 if (accountInfo) {
                     const lamports = accountInfo.lamports;
-                    setbalance(lamports / LAMPORTS_PER_SOL);
+                    setBalance(lamports / LAMPORTS_PER_SOL);
                 }
             } catch (error) {
                 console.error('Error fetching account info:', error);
             }
         };
 
-        //fetch initial balance
         fetchBalance();
-    }, [connection, devnetKey])
-
+      
+         
+        }, [connection, publicKey]);
 
   return (
     <div>
+      <main>
+        <div style={{display:"flex"}}>
+          <WalletMultiButton />
+          <WalletDisconnectButton/>
+          
+        </div>
        <h1>Balance: {balance} SOL</h1>
+      </main>
     </div>
   )
 }
+
