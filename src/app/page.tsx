@@ -21,10 +21,9 @@ export default function Home() {
   return (
     <div>
       <main>
-        <div>
+        <div style={{display:"flex"}}>
           <WalletMultiButton />
-            <WalletConnectButton/>
-            <WalletDisconnectButton/>
+          <WalletDisconnectButton/>
         </div>
 
       </main>

@@ -13,7 +13,7 @@ interface AppwalletproviderProps {
 
 
 const Appwalletprovider: React.FC<AppwalletproviderProps> = ({ children }) =>{
-    const network = WalletAdapterNetwork.Testnet;
+    const network = WalletAdapterNetwork.Devnet;
     const endpoint = useMemo(() => clusterApiUrl(network), [network]);
     const wallets = useMemo(
         () => [
